@@ -158,3 +158,27 @@ def IMCTuning(K, Tlag1, Tlag2=0, theta=0, gamma=0.5, process='FOPDT-PI'):
     :return: PID  controller Kc, Ti and Td 
     """
     
+    TCLP = gamma * Tlag1 
+    
+    if process == 'FOPDT-PI':
+        
+        Kc = (Tlag1 / (TCLP + theta)) / K
+        Ti = Tlag1
+        return Kc, Ti, 0
+        
+    if process == 'FOPDT-PID':
+        
+        Kc = ((Tlag1 + (theta / 2)) / (TCLP + (theta / 2))) / K
+        Ti = Tlag1 + (theta / 2)
+        Td = (Tlag1 * theta) / ((2 * Tlag1) + theta)
+        return Kc, Ti, Td
+        
+    if process == 'SOPDT':
+        
+        Kc = ((Tlag1 + Tlag2) / (TCLP + theta)) / K
+        Ti = Tlag1 + Tlag2
+        Td = (Tlag1 * Tlag2) / (Tlag1 + Tlag2)
+        return Kc, Ti, Td
+    
+    return 0, 0, 0
+    
