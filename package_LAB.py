@@ -41,6 +41,9 @@ def LeadLag_RT(MV,Kp,Tlead,Tlag,Ts,PV,PVInit=0,method='EBD'):
     else:
         PV.append(Kp*MV[-1])
         
+        
+        
+        
 #-----------------------------------
 def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method='EBD-EBD'):
     
@@ -133,3 +136,25 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
         MV_next = MVMin
                    
     MV.append(MV_next)
+    
+    
+    
+    
+#-----------------------------------
+def IMCTuning(K, Tlag1, Tlag2=0, theta=0, gamma=0.5, process='FOPDT-PI'):
+    
+    """
+    
+    :K: process gain
+    :Tlag1: first (or main) lag time constant [s]
+    :Tlag2: second lag time constant [s] (optional: default value is 0.0)
+    :theta: delay [s] (optional: default value is 0.0)
+    :gamma: used to compute the desired closed-loop time constant TCLP [s] (range for gamma [0.2 ... 0.9], optional: default value is 0.5)
+    :process: (optional: default value is 'FOPDT-PI')
+        FOPDT-PI: First Order Plus Dead Time for PI control (IMC tuning: case G)
+        FOPDT-PID: First Order Plus Dead Time for PID control (IMC tuning: case H)
+        SOPDT: Second Order Plus Dead Time for PID control (IMC tuning: case I)
+     
+    :return: PID  controller Kc, Ti and Td 
+    """
+    
