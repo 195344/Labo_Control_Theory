@@ -78,7 +78,7 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     
     
     
-    if len(PV) or len(E) == 0:
+    if len(PV) == 0:
         E.append(SP[-1] - PVInit)
     else:
         E.append(SP[-1] - PV[-1])
@@ -100,11 +100,10 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
         
         
     #Integral part 
-    if Ti > 0:
-        if len(MVI) !=0:
-            MVI.append(Kc * (Ts / Ti) * E[-1] + MVI[-1])
-        else:
-            MVI.append(Kc * (Ts / Ti) * E[-1])
+    if len(MVI) == 0:
+        MVI.append((Kc * Ts / Ti) * E[-1])
+    else:
+        MVI.append(((Kc * Ts / Ti) * E[-1]) + MVI[-1])
         
         
     #Proportional part
