@@ -86,17 +86,16 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
         
     #Derivative part
     Tfd = alpha * Td
-    if Td > 0:
-        if len(MVD) !=0:
-            if len(E) == 1:
-                MVD.append((Tfd / (Tfd + Ts)) * MVD[-1] + ((Kc * Td) / (Tfd + Ts)) * (E[-1]))
-            else:
-                MVD.append((Tfd / (Tfd + Ts)) * MVD[-1] + ((Kc * Td) / (Tfd + Ts)) * (E[-1] - E[-2]))
+    if len(MVD) !=0:
+        if len(E) == 1:
+            MVD.append((Tfd / (Tfd + Ts)) * MVD[-1] + ((Kc * Td) / (Tfd + Ts)) * (E[-1]))
         else:
-            if len(E) == 1:
-                MVD.append((Kc * Td) / (Tfd + Ts) * (E[-1]))
-            else:
-                MVD.append((Kc * Td) / (Tfd + Ts) * (E[-1] - E[-2]))
+            MVD.append((Tfd / (Tfd + Ts)) * MVD[-1] + ((Kc * Td) / (Tfd + Ts)) * (E[-1] - E[-2]))
+    else:
+        if len(E) == 1:
+            MVD.append((Kc * Td) / (Tfd + Ts) * (E[-1]))
+        else:
+            MVD.append((Kc * Td) / (Tfd + Ts) * (E[-1] - E[-2]))
         
         
     #Integral part 
@@ -170,6 +169,7 @@ def IMCTuning(K, Tlag1, Tlag2=0, theta=0, gamma=0.5, process='FOPDT-PI'):
         Kc = ((Tlag1 + (theta / 2)) / (TCLP + (theta / 2))) / K
         Ti = Tlag1 + (theta / 2)
         Td = (Tlag1 * theta) / ((2 * Tlag1) + theta)
+        
         return Kc, Ti, Td
         
     if process == 'SOPDT':
