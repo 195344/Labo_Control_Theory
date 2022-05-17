@@ -185,21 +185,19 @@ def IMCTuning(K, Tlag1, Tlag2=0, theta=0, gamma=0.5, process='FOPDT-PI'):
 
 
 #-----------------------------------        
-class Process:
+class PID:
     
     def __init__(self, parameters):
         
         self.parameters = parameters
-        self.parameters['Kp'] = parameters['Kp'] if 'Kp' in parameters else 1.0
-        self.parameters['theta'] = parameters['theta'] if 'theta' in parameters else 0.0
-        self.parameters['Tlead1'] = parameters['Tlead1'] if 'Tlead1' in parameters else 0.0
-        self.parameters['Tlead2'] = parameters['Tlead2'] if 'Tlead2' in parameters else 0.0
-        self.parameters['Tlag1'] = parameters['Tlag1'] if 'Tlag1' in parameters else 0.0
-        self.parameters['Tlag2'] = parameters['Tlag2'] if 'Tlag2' in parameters else 0.0
+        self.parameters['Ti'] = parameters['Ti'] if 'Ti' in parameters else 10.0
+        self.parameters['Td'] = parameters['Td'] if 'Td' in parameters else 0.0
+        self.parameters['Kc'] = parameters['Kc'] if 'Kc' in parameters else 0.0
+        self.parameters['alpha'] = parameters['alpha'] if 'alpha' in parameters else 0.0
 
 
 #-----------------------------------
-def Margins(P, C, omega):
+def Margins(P, C, omega, Show = True):
     
     """
     :P: Process as defined by the class "Process"
@@ -234,5 +232,77 @@ def Margins(P, C, omega):
     
     The function "Margins" generates the Bode diagram of the loop gain L = P*C with the stability margins/
     """
+
+    s = 1j*omega
+    Ptheta = np.exp(-P.parameters['theta']*s)
+    PGain = P.parameters['Kp']*np.ones_like(Ptheta)
+    PLag1 = 1/(P.parameters['Tlag1']*s + 1)
+    PLag2 = 1/(P.parameters['Tlag2']*s + 1)
+    PLead1 = P.parameters['Tlead1']*s + 1
+    PLead2 = P.parameters['Tlead2']*s + 1
+
+    Ps = np.multiply(Ptheta,PGain)
+    Ps = np.multiply(Ps,PLag1)
+    Ps = np.multiply(Ps,PLag2)
+    Ps = np.multiply(Ps,PLead1)
+    Ps = np.multiply(Ps,PLead2)
+
+    Cs = C.parameters['Kc']*(1 + (1/C.parameters['Ti'])*s + (C.parameters['Td']*s)/(C.parameters['alpha'] * C.parameters['Td'] * s + 1))
+    Ls = np.multiply(Ps,Cs)
+
+    if Show == True:
+        fig, (ax_gain, ax_phase) = plt.subplots(2,1)
+        fig.set_figheight(12)
+        fig.set_figwidth(22)
     
+        gain = 20*np.log10(np.abs(Ls))
+        phase = (180/np.pi)*np.unwrap(np.angle(Ls))
     
+        # Gain proche de 0
+        gain0 = np.argmin(np.abs(gain))
+
+        # Phase proche de -180
+        phase180 = np.argmin(np.abs(phase - (-180)))
+    
+        # Trouver les valeurs de Gain et phase de marge
+        gainCross = omega[gain0]
+        phaseCross = omega[phase180]
+    
+        ax_gain.set_title('Diagramme de Bode,Marge de Phase :  {}°, Marge de gain : {} dB'.format(np.around(180+phase[gain0], decimals=3), np.around(-gain[phase180], decimals=3)))
+    
+    #Gain
+    
+        point1 = [phaseCross, gain[phase180]]
+        point2 = [phaseCross, 0]
+        x_values = [point1[0], point2[0]]
+        y_values = [point1[1], point2[1]]
+        ax_gain.plot(x_values, y_values, label='Gain margin')
+
+        ax_gain.semilogx(omega,gain,label='L(s)')
+        ax_gain.axhline(y=0, color='r', linestyle='-', label='0 dB')
+        gain_min = np.min(20*np.log10(np.abs(Ls)/5))
+        gain_max = np.max(20*np.log10(np.abs(Ls)*5))
+        ax_gain.set_xlim([np.min(omega), np.max(omega)])
+        ax_gain.set_ylim([gain_min, gain_max])
+        ax_gain.set_ylabel('Amplitude |L| [db]')
+        ax_gain.legend(loc='best')
+  
+    # Phase
+
+
+        point1 = [gainCross, -180]
+        point2 = [gainCross, phase[gain0]]
+        x_values = [point1[0], point2[0]]
+        y_values = [point1[1], point2[1]]
+        ax_phase.plot(x_values, y_values, label='Phase margin')
+
+        ax_phase.semilogx(omega, phase, label='L(s)') 
+        ax_phase.axhline(y=-180, color='r', linestyle='-', label='-180 deg')
+        ax_phase.set_xlim([np.min(omega), np.max(omega)])
+        ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ls))) - 10
+        ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ls))) + 10
+        ax_phase.set_ylim([np.max([ph_min, -200]), ph_max])
+        ax_phase.set_ylabel(r'Phase $\angle L$ [°]')
+        ax_phase.legend(loc='best')
+    else:
+        return Ls
