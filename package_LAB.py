@@ -107,13 +107,13 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
         
     #Proportional part
     MVP.append(Kc * E[-1])
-    
-    
-    #Manual mode + anti wind-up
-    if ManFF:
-        MVFFint = MVFF[-1]
-    else:
+        
+        
+        
+    if len(MVFF) == 0:
         MVFFint = 0
+    else:
+        MVFFint = MVFF[-1]
         
     if bool(Man[-1]) == True:
         if ManFF:
