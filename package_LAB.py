@@ -252,57 +252,52 @@ def Margins(P, C, omega, Show = True):
 
     if Show == True:
         fig, (ax_gain, ax_phase) = plt.subplots(2,1)
-        fig.set_figheight(12)
-        fig.set_figwidth(22)
+        fig.set_figheight(10)
+        fig.set_figwidth(18)
     
         gain = 20*np.log10(np.abs(Ls))
         phase = (180/np.pi)*np.unwrap(np.angle(Ls))
     
-        # Gain proche de 0
-        gain0 = np.argmin(np.abs(gain))
+        gain_0 = np.argmin(np.abs(gain))
+        phase_180 = np.argmin(np.abs(phase + 180))
+        gain_int = omega[gain_0]
+        phase_int = omega[phase_180]
+    
+        ax_gain.set_title('Bode plot (Gain margin :  {}dB at {} rad/s, Phase margin : {}° at {} rad/s)'.format(np.around(-gain[phase_180], decimals=2), np.around(omega[phase_180], decimals=4), np.around(-phase[gain_0], decimals=2), np.around(omega[gain_0], decimals=4)))
 
-        # Phase proche de -180
-        phase180 = np.argmin(np.abs(phase - (-180)))
-    
-        # Trouver les valeurs de Gain et phase de marge
-        gainCross = omega[gain0]
-        phaseCross = omega[phase180]
-    
-        ax_gain.set_title('Diagramme de Bode,Marge de Phase :  {}°, Marge de gain : {} dB'.format(np.around(180+phase[gain0], decimals=3), np.around(-gain[phase180], decimals=3)))
-    
-    #Gain
-    
-        point1 = [phaseCross, gain[phase180]]
-        point2 = [phaseCross, 0]
-        x_values = [point1[0], point2[0]]
-        y_values = [point1[1], point2[1]]
-        ax_gain.plot(x_values, y_values, label='Gain margin')
-
-        ax_gain.semilogx(omega,gain,label='L(s)')
-        ax_gain.axhline(y=0, color='r', linestyle='-', label='0 dB')
+        
+        #Gain
+        pt1 = [phase_int, gain[phase_180]]
+        pt2 = [phase_int, 0]
+        x_value = [pt1[0], pt2[0]]
+        y_value = [pt1[1], pt2[1]]
+        
+        ax_gain.plot(x_value, y_value, color='orange')
+        ax_gain.semilogx(omega,gain,label='L(s)', color='b')
+        ax_gain.axhline(y=0, color='black', linestyle='-')
         gain_min = np.min(20*np.log10(np.abs(Ls)/5))
         gain_max = np.max(20*np.log10(np.abs(Ls)*5))
+        ax_gain.legend(loc='best')
         ax_gain.set_xlim([np.min(omega), np.max(omega)])
         ax_gain.set_ylim([gain_min, gain_max])
-        ax_gain.set_ylabel('Amplitude |L| [db]')
-        ax_gain.legend(loc='best')
+        ax_gain.set_ylabel('Amplitude |L(s)| [db]')
+        
   
-    # Phase
-
-
-        point1 = [gainCross, -180]
-        point2 = [gainCross, phase[gain0]]
-        x_values = [point1[0], point2[0]]
-        y_values = [point1[1], point2[1]]
-        ax_phase.plot(x_values, y_values, label='Phase margin')
-
-        ax_phase.semilogx(omega, phase, label='L(s)') 
-        ax_phase.axhline(y=-180, color='r', linestyle='-', label='-180 deg')
+        # Phase
+        pt1 = [gain_int, -180]
+        pt2 = [gain_int, phase[gain_0]]
+        x_value = [pt1[0], pt2[0]]
+        y_value = [pt1[1], pt2[1]]
+        
+        ax_phase.plot(x_value, y_value, color='orange')
+        ax_phase.semilogx(omega, phase, label='L(s)', color='b') 
+        ax_phase.axhline(y=-180, color='black', linestyle='-')
         ax_phase.set_xlim([np.min(omega), np.max(omega)])
         ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ls))) - 10
         ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ls))) + 10
+        ax_phase.legend(loc='best')
         ax_phase.set_ylim([np.max([ph_min, -200]), ph_max])
         ax_phase.set_ylabel(r'Phase $\angle L$ [°]')
-        ax_phase.legend(loc='best')
+        
     else:
         return Ls
